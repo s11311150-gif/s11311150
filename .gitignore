@@ -20,6 +20,7 @@ package-lock.json
 # Temporary and local build files
 *.tmp
 *.bak
+*.bat
 gemini-code*
 dist/
 build/
