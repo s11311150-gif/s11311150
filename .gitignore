@@ -1,0 +1,25 @@
+# Operating System files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Editor & IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node / Package managers (if added later)
+node_modules/
+package-lock.json
+*.log
+
+# Temporary and local build files
+*.tmp
+*.bak
+gemini-code*
+dist/
+build/

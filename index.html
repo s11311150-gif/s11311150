@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>經典吃豆人 (Pac-Man)</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<div id="game-container">
+    <div class="ui-panel">
+        <div>SCORE: <span id="score">0</span></div>
+        <div>HIGH SCORE: <span id="high-score">0</span></div>
+    </div>
+    <canvas id="gameCanvas" width="448" height="496"></canvas>
+    <div class="instructions">使用方向鍵 (← ↑ → ↓) 或 WASD 控制移動 | [空白鍵] 重新開始</div>
+</div>
+
+<script type="module" src="./js/main.js"></script>
+</body>
+</html>
