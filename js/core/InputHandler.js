@@ -10,6 +10,8 @@ export class InputHandler {
         this.currentRequestedDir = DIRECTIONS.NONE;
         this.onDirectionChanged = null;
         this.onRestartRequested = null;
+        this.onMuteRequested = null;
+        this.onUserInteraction = null;
 
         this.handleKeyDown = this.handleKeyDown.bind(this);
         this.init();
@@ -55,8 +57,18 @@ export class InputHandler {
                     this.onRestartRequested();
                 }
                 break;
+            case 'm':
+            case 'M':
+                if (this.onMuteRequested) {
+                    this.onMuteRequested();
+                }
+                break;
             default:
                 return;
+        }
+
+        if (this.onUserInteraction) {
+            this.onUserInteraction();
         }
 
         if (dir) {

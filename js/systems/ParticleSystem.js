@@ -36,26 +36,28 @@ export class ParticleSystem {
     }
 
     /**
-     * 吃能量豆時的強烈爆發特效
+     * 吃大蘋果 (能量豆) 時的農場豐收爆發特效
      */
     emitPowerBurst(x, y) {
-        this.emit(x, y, '#ffff00', 16, 3, 35);
-        this.emit(x, y, '#00ffff', 12, 2, 25);
+        this.emit(x, y, '#e53935', 12, 3, 35); // 蘋果紅
+        this.emit(x, y, '#ffca28', 12, 2.5, 30); // 金黃光芒
+        this.emit(x, y, '#43a047', 8, 2, 25);   // 嫩綠新芽
     }
 
     /**
      * 吃掉驚嚇幽靈時的計分爆炸特效
      */
-    emitGhostEaten(x, y, color = '#0000ff') {
+    emitGhostEaten(x, y, color = '#3f51b5') {
         this.emit(x, y, '#ffffff', 14, 3.5, 40);
         this.emit(x, y, color, 14, 2.5, 30);
     }
 
     /**
-     * 吃普通豆子時的微弱光點
+     * 採收玉米 (普通豆子) 時的微光特效
      */
     emitPelletSpark(x, y) {
-        this.emit(x, y, '#ffb8ae', 4, 1.2, 15);
+        this.emit(x, y, '#ffca28', 4, 1.2, 15);
+        this.emit(x, y, '#fff9c4', 2, 0.8, 12);
     }
 
     /**

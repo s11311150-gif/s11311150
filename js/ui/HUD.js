@@ -86,13 +86,13 @@ export class HUD {
      * 繪製 Game Over
      */
     drawGameOver(ctx, canvas) {
-        this.drawOverlay(ctx, canvas, 'GAME OVER', '#ff0000');
+        this.drawOverlay(ctx, canvas, '🌾 農場遭遇襲擊 🌾', '#e53935', '按下 [ 空白鍵 ] 重新耕作');
     }
 
     /**
      * 繪製 You Win
      */
     drawGameWon(ctx, canvas) {
-        this.drawOverlay(ctx, canvas, 'YOU WIN!', '#00ff00');
+        this.drawOverlay(ctx, canvas, '🌽 農場大豐收！ 🌽', '#ffeb3b', '按下 [ 空白鍵 ] 再次挑戰');
     }
 }

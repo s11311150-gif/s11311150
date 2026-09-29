@@ -1,6 +1,6 @@
-/**
+﻿/**
  * 幽靈敵方實體 (Ghost)
- * 繼承自 Entity，包含巡航 AI、路口決策、受驚嚇狀態與動畫渲染
+ * 繼承自 Entity，包含巡航 AI、路口決策、平滑移動、受驚嚇狀態與農場造型動畫
  */
 
 import { Entity } from './Entity.js';
@@ -52,11 +52,7 @@ export class Ghost extends Entity {
     }
 
     /**
-     * 更新幽靈 AI 狀態與位置
-     * @param {number} dt 
-     * @param {number} dtFactor 
-     * @param {number[][]} map 
-     * @param {{x: number, y: number}} target 目標實體 (通常為 Player)
+     * 更新幽靈 AI 狀態與位置 (支援動態影格補償)
      */
     update(dt, dtFactor, map, target) {
         if (this.isFrightened) {
@@ -66,22 +62,24 @@ export class Ghost extends Entity {
             }
         }
 
+        const factor = Math.max(0.6, Math.min(1.4, dtFactor || 1.0));
+        const currentSpeed = (this.isFrightened 
+            ? this.speed * GHOST_CONSTANTS.SPEED_FRIGHTENED_FACTOR 
+            : this.speed) * factor;
+
         const { CELL_SIZE, OFFSET_X, OFFSET_Y } = GRID_CONFIG;
         const currentGridX = Math.floor((this.x - OFFSET_X) / CELL_SIZE);
         const currentGridY = Math.floor((this.y - OFFSET_Y) / CELL_SIZE);
         const centerX = currentGridX * CELL_SIZE + CELL_SIZE / 2 + OFFSET_X;
         const centerY = currentGridY * CELL_SIZE + CELL_SIZE / 2 + OFFSET_Y;
 
-        // 當處於格子中心 (容許誤差在 speed 內) 時重新選擇前進方向
-        if (Math.abs(this.x - centerX) < this.speed && Math.abs(this.y - centerY) < this.speed) {
+        // 當處於格子中心 (容許誤差在當前步長內) 時重新選擇前進方向
+        if (Math.abs(this.x - centerX) <= Math.max(currentSpeed, 1.5) && 
+            Math.abs(this.y - centerY) <= Math.max(currentSpeed, 1.5)) {
             this.x = centerX;
             this.y = centerY;
             this.dir = this.chooseNextDirection(currentGridX, currentGridY, map, target);
         }
-
-        const currentSpeed = this.isFrightened 
-            ? this.speed * GHOST_CONSTANTS.SPEED_FRIGHTENED_FACTOR 
-            : this.speed;
 
         this.x += this.dir.x * currentSpeed;
         this.y += this.dir.y * currentSpeed;
@@ -92,11 +90,6 @@ export class Ghost extends Entity {
 
     /**
      * AI 路徑轉向決策
-     * @param {number} gx 
-     * @param {number} gy 
-     * @param {number[][]} map 
-     * @param {{x: number, y: number}} target 
-     * @returns {Object} 最佳移動方向向量
      */
     chooseNextDirection(gx, gy, map, target) {
         const candidateDirs = [
@@ -107,26 +100,23 @@ export class Ghost extends Entity {
         ];
 
         const possibleDirs = candidateDirs.filter(d => {
-            // 不能 180 度直接回頭
             if (d.x === -this.dir.x && d.y === -this.dir.y) return false;
-            // 不能撞牆
             const nextGx = gx + d.x;
             const nextGy = gy + d.y;
             return map[nextGy] && map[nextGy][nextGx] !== TILE_TYPES.WALL;
         });
 
-        // 遇到死胡同等特殊情況，強制反轉回頭
         if (possibleDirs.length === 0) {
             return { x: -this.dir.x, y: -this.dir.y };
         }
 
-        // 驚嚇狀態：隨機在可行路徑中漫遊
+        // 驚嚇狀態：隨機漫遊
         if (this.isFrightened) {
             const randomIndex = Math.floor(Math.random() * possibleDirs.length);
             return possibleDirs[randomIndex];
         }
 
-        // 正常追蹤：選擇直線距離目標 (Pac-Man) 最近的可行方向
+        // 正常追蹤：選擇距離目標最近的方向
         const { CELL_SIZE, OFFSET_X, OFFSET_Y } = GRID_CONFIG;
         let bestDir = possibleDirs[0];
         let minDistance = Infinity;
@@ -145,10 +135,13 @@ export class Ghost extends Entity {
     }
 
     /**
-     * 繪製幽靈造型與驚嚇閃爍外觀
-     * @param {CanvasRenderingContext2D} ctx 
+     * 繪製幽靈造型 (農場稻草人幽靈風格)
      */
     draw(ctx) {
+        ctx.save();
+
+        const r = this.radius;
+
         // 驚嚇狀態與瀕臨結束時的閃爍效果
         if (this.isFrightened) {
             const isFlashing = this.frightenedTimer < GHOST_CONSTANTS.FLASH_THRESHOLD && 
@@ -159,34 +152,62 @@ export class Ghost extends Entity {
         }
 
         ctx.beginPath();
-        const r = this.radius;
-
         // 幽靈頭部半圓
         ctx.arc(this.x, this.y - 2, r, Math.PI, 0, false);
-        // 幽靈下半身裙擺波浪
+        // 幽靈下半身裙擺波浪 (輕柔起伏)
         ctx.lineTo(this.x + r, this.y + r);
-        ctx.lineTo(this.x + r / 2, this.y + r - 4);
+        ctx.lineTo(this.x + r * 0.5, this.y + r - 3);
         ctx.lineTo(this.x, this.y + r);
-        ctx.lineTo(this.x - r / 2, this.y + r - 4);
+        ctx.lineTo(this.x - r * 0.5, this.y + r - 3);
         ctx.lineTo(this.x - r, this.y + r);
         ctx.closePath();
         ctx.fill();
 
-        // 眼睛與視線方向繪製 (受驚嚇時不畫眼睛細節)
+        // 農場迷你小草帽飾品 (頭頂可愛小配件)
         if (!this.isFrightened) {
-            // 眼白
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = '#e0a948';
             ctx.beginPath();
-            ctx.arc(this.x - 4, this.y - 4, 3, 0, Math.PI * 2);
-            ctx.arc(this.x + 4, this.y - 4, 3, 0, Math.PI * 2);
+            ctx.ellipse(this.x, this.y - r - 2, r * 0.6, 2, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // 瞳孔（隨移動方向微調）
-            ctx.fillStyle = '#000000';
+            ctx.fillStyle = '#f5c563';
             ctx.beginPath();
-            ctx.arc(this.x - 4 + this.dir.x, this.y - 4 + this.dir.y, 1.5, 0, Math.PI * 2);
-            ctx.arc(this.x + 4 + this.dir.x, this.y - 4 + this.dir.y, 1.5, 0, Math.PI * 2);
+            ctx.arc(this.x, this.y - r - 3.5, 3, Math.PI, 0);
             ctx.fill();
+
+            // 眼睛
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(this.x - 4, this.y - 3, 3, 0, Math.PI * 2);
+            ctx.arc(this.x + 4, this.y - 3, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 瞳孔
+            ctx.fillStyle = '#212121';
+            ctx.beginPath();
+            ctx.arc(this.x - 4 + this.dir.x * 1.2, this.y - 3 + this.dir.y * 1.2, 1.5, 0, Math.PI * 2);
+            ctx.arc(this.x + 4 + this.dir.x * 1.2, this.y - 3 + this.dir.y * 1.2, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // 驚嚇狀態：嚇到發抖的表情
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(this.x - 3.5, this.y - 2, 2, 0, Math.PI * 2);
+            ctx.arc(this.x + 3.5, this.y - 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 顫抖波浪小嘴
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(this.x - 5, this.y + 4);
+            ctx.lineTo(this.x - 2.5, this.y + 2);
+            ctx.lineTo(this.x, this.y + 4);
+            ctx.lineTo(this.x + 2.5, this.y + 2);
+            ctx.lineTo(this.x + 5, this.y + 4);
+            ctx.stroke();
         }
+
+        ctx.restore();
     }
 }

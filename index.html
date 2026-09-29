@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>經典吃豆人 (Pac-Man)</title>
+    <title>農場吃豆人 (Farmer Pac-Man)</title>
     <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
 
 <div id="game-container">
     <div class="ui-panel">
-        <div>SCORE: <span id="score">0</span></div>
-        <div>HIGH SCORE: <span id="high-score">0</span></div>
+        <div>🌽 豐收: <span id="score">0</span></div>
+        <div>🏆 最高: <span id="high-score">0</span></div>
+        <button id="bgm-toggle" class="bgm-btn" title="切換背景音樂 (按 M)">🎵 音樂: 開</button>
     </div>
     <canvas id="gameCanvas" width="448" height="496"></canvas>
-    <div class="instructions">使用方向鍵 (← ↑ → ↓) 或 WASD 控制移動 | [空白鍵] 重新開始</div>
+    <div class="instructions">使用方向鍵 (← ↑ → ↓) 或 WASD 移動 | [空白鍵] 重新開始 | [M] 音樂開關</div>
 </div>
 
 <script type="module" src="./js/main.js"></script>
